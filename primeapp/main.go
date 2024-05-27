@@ -3,12 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
+	"strconv"
+	"strings"
 )
 
 func main() {
 	intro()
 	doneChan := make(chan bool)
+	go readUserInput(doneChan)
+	<-doneChan
+	close(doneChan)
+	fmt.Println("End")
 }
 
 func intro() {
@@ -22,8 +28,8 @@ func prompt() {
 	fmt.Print("-> ")
 }
 
-func readUserInput(doneChan chan bool) {
-	scanner := bufio.NewScanner(os.Stdin)
+func readUserInput(in io.Reader, doneChan chan bool) {
+	scanner := bufio.NewScanner(in)
 
 	for {
 		res, done := checkNumbers(scanner)
@@ -32,7 +38,25 @@ func readUserInput(doneChan chan bool) {
 			return
 		}
 
+		fmt.Println(res)
+		prompt()
 	}
+}
+
+func checkNumbers(scanner *bufio.Scanner) (string, bool) {
+	scanner.Scan()
+	if strings.EqualFold(scanner.Text(), "q") {
+		return "", true
+	}
+
+	numToCheck, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		return "Please enter a number", false
+	}
+
+	_, msg := isPrime(numToCheck)
+
+	return msg, false
 }
 
 func isPrime(n int) (bool, string) {
