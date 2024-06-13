@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -11,7 +12,7 @@ import (
 func main() {
 	intro()
 	doneChan := make(chan bool)
-	go readUserInput(doneChan)
+	go readUserInput(os.Stdin, doneChan)
 	<-doneChan
 	close(doneChan)
 	fmt.Println("End")
