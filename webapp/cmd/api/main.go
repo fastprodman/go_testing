@@ -1,27 +1,28 @@
 package main
 
 import (
-	"encoding/gob"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
-	"webapp/pkg/data"
 	"webapp/pkg/repository"
 	"webapp/pkg/repository/dbrepo"
-
-	"github.com/alexedwards/scs/v2"
 )
 
+const port = 8090
+
 type application struct {
-	DSN     string
-	DB      repository.DatabaseRepo
-	Session *scs.SessionManager
+	DSN       string
+	DB        repository.DatabaseRepo
+	Domain    string
+	JWTSecret string
 }
 
 func main() {
-	gob.Register(data.User{})
-	app := application{}
+	var app application
+	flag.StringVar(&app.Domain, "domain", "example.com", "Domain momain")
 	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5432 user=postgres password=postgres dbname=users sslmode=disable", "postgres connection")
+	flag.StringVar(&app.JWTSecret, "jwt-secret", "mystring", "signing secret")
 	flag.Parse()
 
 	conn, err := app.connectToDB()
@@ -29,13 +30,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+
 	app.DB = &dbrepo.PostgresDBRepo{DB: conn}
 
-	app.Session = getSession()
-	mux := app.routes()
-
-	log.Println("Starting server on port 8080...")
-	err = http.ListenAndServe(":8080", mux)
+	log.Printf("Starting api on port %d\n", port)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", port), app.routes())
 	if err != nil {
 		log.Fatal(err)
 	}

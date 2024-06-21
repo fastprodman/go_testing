@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_Form_Add(t *testing.T) {
+func Test_Form_Has(t *testing.T) {
 	form := NewForm(nil)
 	has := form.Has("whatever")
 	if has {
